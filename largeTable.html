@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+    <html style="width:100%;height:100%;">
+        <head lang="en">
+            <meta charset="UTF-8">
+            <title></title>
+            <script src="http://code.jquery.com/jquery-1.11.0.min.js" type="text/javascript"></script>
+            <style  type="text/css">
+                *{
+                    margin:0;
+                    padding:0;
+                }
+                ul,li{
+                    list-style: none;
+                }
+                .appLi{
+                    width:100%;
+                    height:70px;
+                    background:#ccc;
+                    border:1px solid #008eed;
+                    padding-left:20px;
+                    box-sizing: border-box;
+                }
+            </style>
+            <script type="text/javascript">
+                var tableList=[
+                  1,2,3,4,5,6,7,8,9,10,
+                  11,12,13,14,15,16,17,18,19,20,
+                  21,22,23,24,25,26,27,28,29,30,
+                  31,32,33,34,35,36,37,38,39,40,
+                  41,42,43,44,45,46,47,48,49,50,
+                   51,52,53,54,55,56,57,58,59,60,
+                   61,62,63,64,65,66,67,68,69,70,
+                   71,72,73,74,75,76,77,78,79,80,
+                   81,82,83,84,85,86,87,88,89,90,
+                   91,92,93,94,95,96,97,98,99,100
+                ]
+                var pageNum=1
+                var scrollTop =0
+                var isScrollUp = false
+                var pageSize=10
+                var total = tableList.length
+                var itemHeight = 70
+                var viewportHeight = 0
+                var tHeight=0
+                var bHeight=(total-pageSize)*itemHeight
+                jQuery(document).ready(function(event){
+                  viewportHeight = $("#app").height()
+                  jQuery("#bottom").height(bHeight);
+                  getNextPage()
+
+                  jQuery("#app").scroll(function(event){
+                    var isScrollUpNow=getIsScrollUp()
+                    if(isScrollUp !== isScrollUpNow){//滚动方向变了
+                      isScrollUp = isScrollUpNow
+                      pageNum  = getPageNumNow()//计算前滚动的pageNum
+                    }
+                    scrollTop = getScrollTop();
+                    if(isScrollUp){
+                      if(scrollTop <itemHeight*(pageNum -1)*pageSize){//滚到上一页之外
+                        let computePageNum =getPageNumNow()//计算滚动后的pageNum
+                        if(computePageNum == pageNum){//在当前页内滚动
+                          return
+                        }else{//滚动到下一页
+                          pageNum=computePageNum
+                        }
+                        altBHeight();//改变#bottom的高度
+                        altTHeight();//改变#top的高度
+                        getNextPage()//获取下一页
+                      }
+                    }else{
+                      if(scrollTop >=(itemHeight*pageNum*pageSize-viewportHeight)){//滚到上一页之外
+                        let computePageNum =getPageNumNow()//计算当前页
+                        if(computePageNum == pageNum){//在当前页内滚动
+                          return
+                        }else{
+                          pageNum=computePageNum//滚到下一页
+                        }
+                        altBHeight();
+                        altTHeight();
+                        getNextPage()
+                      }
+                    }
+                  })
+
+                })
+                function getLastItemIndexOfView(){//当向上滚时，计算和#app上边框最近的元素的index；向下滚时，计算和#app下边框最近的元素的index
+                  let numOrigin = 0
+                  let numInt= 0
+                  if(isScrollUp){
+                    numOrigin = scrollTop/itemHeight +1
+                    numInt =  parseInt(numOrigin)
+                  }else{
+                    numOrigin = (scrollTop+viewportHeight)/itemHeight
+                    numInt =  parseInt(numOrigin)
+                    if(numOrigin>numInt){
+                      numInt++
+                    }
+                  }
+
+                  return numInt
+                }
+                function getPageNumNow(){//计算当前页码
+                  let lastItemIndexOfView = getLastItemIndexOfView()
+                  let pageNumOrigin =0
+                  let pageNumInt = 0
+                  pageNumOrigin = lastItemIndexOfView/pageSize
+                  pageNumInt = parseInt(lastItemIndexOfView/pageSize)
+                  if(pageNumOrigin>pageNumInt){
+                    pageNumInt++
+                  }
+
+                  return pageNumInt
+                }
+                function isLastPage(pageNumNow){//是否是最后一页。最后一页可能元素条数<=pageSize
+                  if(pageNumNow === undefined)pageNumNow = pageNum
+                  var lastPageNumOrigin = total/pageSize
+                  var lastPageNumInt = parseInt(lastPageNumOrigin)
+                  if((lastPageNumOrigin>lastPageNumInt)||total ==0){
+                    lastPageNumInt++
+                  }
+                  if(pageNumNow == lastPageNumInt){
+                    return true
+                  }else{
+                    return false
+                  }
+                }
+                function getNextPage(){//获取下一页数据，并添加到#center里
+                  if(jQuery("#center").children() && jQuery("#center").children().length>0){//删除#center所有子节点
+                    jQuery("#center").children().remove()
+                  }
+                  if(isScrollUp){
+                    if(isLastPage()||isLastPage(pageNum+1)){//如果本叶是最后一页或者上页是最后一页（最后一页元素数量可能小于pageSize，要特殊处理）
+                      for(var k=0;k<(total-(pageNum-1)*pageSize);k++){
+                        jQuery("#center").append(`<li class = 'appLi'>${tableList[(pageNum-1)*pageSize +k]}</li>`)
+                      }
+                    }else{
+                      for(var k=0;k<pageSize*2;k++){
+                        jQuery("#center").append(`<li class = 'appLi'>${tableList[(pageNum-1)*pageSize +k]}</li>`)
+                      }
+                    }
+                  }else{
+                    if(pageNum ==1){
+                      for(var k=0;k<(isLastPage()?(total-(pageNum-1)*pageSize):pageSize);k++){
+                        jQuery("#center").append(`<li class = 'appLi'>${tableList[(pageNum-1)*pageSize +k]}</li>`)
+                      }
+                    }else{
+                      for(var k=0;k<(isLastPage()?(total-(pageNum-2)*pageSize):pageSize*2);k++){
+                        jQuery("#center").append(`<li class = 'appLi'>${tableList[(pageNum-2)*pageSize +k]}</li>`)
+                      }
+                    }
+                  }
+                }
+                function altTHeight(){//改变#header的高度
+                  if(isScrollUp){
+                    tHeight= (pageNum-1)*pageSize*itemHeight ||0
+                  }else{
+                    tHeight=(pageNum -2)*pageSize*itemHeight ||0
+                  }
+                  jQuery("#top").height(tHeight)
+                  jQuery("#app").scrollTop(scrollTop);//修正上滚高度（增加#header的高度，会导致scrollTop变大，这属于异常现象）
+                }
+                function altBHeight(){//改变#bottom的高度
+                  if(isScrollUp){
+                    bHeight= (total-(pageNum+1)*pageSize)*itemHeight ||0
+                  }else{
+                    bHeight= ((total-pageNum*pageSize)*itemHeight) || 0
+                  }
+                  jQuery("#bottom").height(bHeight)
+                }
+                function getIsScrollUp(){//判断是否向上滚动
+                  if(getScrollTop()-scrollTop>=0){
+                    return false
+                  }else{
+                    return true
+                  }
+                }
+                function getScrollTop(){//获取向上滚动的距离
+                  return $("#app").scrollTop()
+                }
+
+            </script>
+        </head>
+    <body>
+        <div id="app"  style="margin:100px;width:500px;height:300px;overflow: auto;background: #0a76a4">
+            <p  id="top"></p>
+            <ul id="center" style="width: 100%">
+            </ul>
+            <p id="bottom"></p>
+        </div>
+        <div id="text"></div>
+    </body>
+</html>
